@@ -10,6 +10,9 @@ Just some backups
 #### 花名册.vb
 主要是遍历文件夹
 
+#### dbt.vb
+主要功能是使用Excel操作数据库，先挖个坑在这
+
 ## balabala
 #### XUtils.cs
 爷自己的一些没用的小工具。XD
