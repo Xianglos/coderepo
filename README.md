@@ -1,5 +1,5 @@
 # somecode
-Just some somecode
+Just some code
 
 ## vb
 #### 隐藏的工作表.vb
