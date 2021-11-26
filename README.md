@@ -1,5 +1,5 @@
 # somecode
-Just some backups
+Just some somecode
 
 ## vb
 #### 隐藏的工作表.vb
@@ -11,7 +11,7 @@ Just some backups
 主要是遍历文件夹
 
 #### dbt.vb
-主要功能是使用Excel操作数据库，先挖个坑在这
+主要功能是使用Excel操作数据库，先挖个坑在辶
 
 ## balabala
 #### XUtils.cs
