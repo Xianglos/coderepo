@@ -11,8 +11,14 @@ import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.CtNewMethod;
 import javassist.NotFoundException;
 
+/**
+ * 字节码转换器
+ * 
+ * 
+ */
 public class MyClassFileTransformer implements ClassFileTransformer {
 
 	/**
@@ -37,18 +43,25 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 			ClassPool pool = ClassPool.getDefault();
 			ClassClassPath classPath = new ClassClassPath(this.getClass());
 			pool.insertClassPath(classPath);
-			CtClass cc = pool.get(className);
+			CtClass ccNumm = pool.get(className);
 
-			// 获得指定方法名的方法
-			CtMethod m = cc.getDeclaredMethod("setNum");
-
-			// 在方法执行前插入代码
-			m.insertBefore("{ System.out.println(\"Before:\"+num); }");
-			m.insertAfter("{ System.out.println(\"After:\"+num); }");
+//			// 获得指定方法名的方法
+//			CtMethod m = cc.getDeclaredMethod("setNum");
+//
+//			// 在方法执行前插入代码
+//			m.insertBefore("{ System.out.println(\"Before:\"+num); }");
+//			m.insertAfter("{ System.out.println(\"After:\"+num); }");
+			
+			//Compile
+			CtMethod m = CtNewMethod.make("public int minus(int input) {return num -= input; }",ccNumm);
+			ccNumm.addMethod(m);
+			
+			CtMethod add = ccNumm.getDeclaredMethod("add");
+			add.setBody("{return minus($1);}");
 
 			System.out.println("Done.");
 
-			return cc.toBytecode();
+			return ccNumm.toBytecode();
 
 		} catch (NotFoundException e) {
 			System.out.println("NotFoundException\n" + e.getStackTrace());
@@ -64,7 +77,7 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 
 	/**
 	 * 在main函数执行前，执行的函数
-	 * 需要在MANIFEST.MF中指定Premain-Class
+	 * 
 	 * @param options
 	 * @param ins
 	 */
