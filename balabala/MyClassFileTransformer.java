@@ -63,6 +63,21 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 
 			return ccNumm.toBytecode();
 
+//			//参数里需要加上-Xbootclasspath/a:
+//			//TODO
+//			ClassPool pool = ClassPool.getDefault();
+//			pool.insertClassPath(new ClassClassPath(String.class));
+//			CtClass stringCt = pool.get("java.lang.String");
+//
+//			CtClass[] param = new CtClass[1];
+//			param[0] = pool.get("java.lang.Object");
+//			CtMethod equals = stringCt.getDeclaredMethod("equals", param);
+//
+//			equals.setBody("{return true;}");
+//			stringCt.toBytecode();
+//			
+//			return null;
+
 		} catch (NotFoundException e) {
 			System.out.println("NotFoundException\n" + e.getStackTrace());
 		} catch (CannotCompileException e) {
