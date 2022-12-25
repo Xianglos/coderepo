@@ -19,25 +19,25 @@ import javassist.CtNewMethod;
 import javassist.NotFoundException;
 
 /**
- * å­—èŠ‚ç è½¬æ¢å™¨
+ * ×Ö½ÚÂë×ª»»Æ÷
  * 
  * 
  */
 public class MyClassFileTransformer implements ClassFileTransformer {
 
 	/**
-	 * å­—èŠ‚ç åŠ è½½åˆ°è™šæ‹Ÿæœºå‰ä¼šè¿›å…¥è¿™ä¸ªæ–¹æ³•
+	 * ×Ö½ÚÂë¼ÓÔØµ½ĞéÄâ»úÇ°»á½øÈëÕâ¸ö·½·¨
 	 */
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 		// log("className:" + className);
-		// å¦‚æœåŠ è½½Nummç±»æ‰æ‹¦æˆª
+		// Èç¹û¼ÓÔØNummÀà²ÅÀ¹½Ø
 		if (!"bci/SomeCode".equals(className)) {
 			return null;
 		}
 
-		// javassistçš„åŒ…åæ˜¯ç”¨ç‚¹åˆ†å‰²çš„ï¼Œéœ€è¦è½¬æ¢ä¸‹
+		// javassistµÄ°üÃûÊÇÓÃµã·Ö¸îµÄ£¬ĞèÒª×ª»»ÏÂ
 		if (className != null && className.indexOf("/") != -1) {
 			className = className.replaceAll("/", ".");
 			log("transform:Get it:" + className);
@@ -46,13 +46,13 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 		List<FormatLog> formatLogList = readFile("D:\\workspace\\java\\ObjectAtLine.txt");
 
 		try {
-			// é€šè¿‡åŒ…åè·å–ç±»æ–‡ä»¶
+			// Í¨¹ı°üÃû»ñÈ¡ÀàÎÄ¼ş
 			ClassPool pool = ClassPool.getDefault();
 			ClassClassPath classPath = new ClassClassPath(this.getClass());
 			pool.insertClassPath(classPath);
 			CtClass ccSomeCode = pool.get(className);
 
-//			// è·å¾—æŒ‡å®šæ–¹æ³•åçš„æ–¹æ³•
+//			// »ñµÃÖ¸¶¨·½·¨ÃûµÄ·½·¨
 			CtMethod runme = ccSomeCode.getDeclaredMethod("runme");
 			// setNum.insertBefore("{ log(\"Before:\"+num); }");
 //			int linenum = setNum.insertAt(20, "{ System.out.println(\"Numm:trans insertAt:\"+$1); }");
@@ -61,11 +61,11 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 			CtMethod logFunc = CtNewMethod.make("private void log(Object obj) {System.out.println(obj);}", ccSomeCode);
 			ccSomeCode.addMethod(logFunc);
 
-//			// åœ¨æ–¹æ³•æ‰§è¡Œå‰æ’å…¥ä»£ç 
+//			// ÔÚ·½·¨Ö´ĞĞÇ°²åÈë´úÂë
 			runme.insertBefore("{ log(\"" + className + ":Start\"); }");
 			runme.insertAfter("{ log(\"" + className + ":End\"); }");
 
-			// åœ¨ç¬¬8è¡Œå¼€å§‹çš„åœ°æ–¹æ’å…¥ï¼Œå¦‚æœè¿™è¡Œåªæœ‰ä¸€ä¸ª{ï¼Œé‚£ä¹ˆä¼šæ’å…¥åˆ°ä¸‹ä¸€è¡Œ
+			// ÔÚµÚ8ĞĞ¿ªÊ¼µÄµØ·½²åÈë£¬Èç¹ûÕâĞĞÖ»ÓĞÒ»¸ö{£¬ÄÇÃ´»á²åÈëµ½ÏÂÒ»ĞĞ
 //			runme.insertAt(8, "{ log(\"runme:num Bef\"+num.getNum()); }");
 			insertLogsByLine(formatLogList, runme);
 
@@ -86,13 +86,13 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 	}
 
 	/**
-	 * åœ¨mainå‡½æ•°æ‰§è¡Œå‰ï¼Œæ‰§è¡Œçš„å‡½æ•°
+	 * ÔÚmainº¯ÊıÖ´ĞĞÇ°£¬Ö´ĞĞµÄº¯Êı
 	 * 
 	 * @param options
 	 * @param ins
 	 */
 	public static void premain(String options, Instrumentation ins) {
-		// æ³¨å†Œæˆ‘è‡ªå·±çš„å­—èŠ‚ç è½¬æ¢å™¨
+		// ×¢²áÎÒ×Ô¼ºµÄ×Ö½ÚÂë×ª»»Æ÷
 		ins.addTransformer(new MyClassFileTransformer());
 	}
 
@@ -107,7 +107,7 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 	}
 
 	/**
-	 * è¯»å–ä¸€ä¸ªtxtæ–‡ä»¶
+	 * ¶ÁÈ¡Ò»¸ötxtÎÄ¼ş
 	 */
 	private List<FormatLog> readFile(String fullFilePath) {
 
@@ -118,7 +118,7 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 		try {
 			scanner = new Scanner(path);
 
-			// ä¸€è¡Œä¸€è¡Œåœ°è¯»å–
+			// Ò»ĞĞÒ»ĞĞµØ¶ÁÈ¡
 			while (scanner.hasNextLine()) {
 
 				// process each line
@@ -137,7 +137,7 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 			}
 			scanner.close();
 		} catch (Exception e) {
-			System.out.println("æŒ‚äº†ï¼Œé‡å¯å§");
+			System.out.println("¹ÒÁË£¬ÖØÆô°É");
 
 			e.printStackTrace();
 		} finally {
@@ -152,7 +152,7 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 	}
 
 	/**
-	 * è¿½åŠ ä¸€äº›log é’ˆå¯¹æ–¹æ³•ï¼Œåœ¨æŒ‡å®šè¡Œæ’å…¥logï¼Œè¡Œæ•°æ˜¯ç›¸å¯¹äºæ•´ä¸ªæ–‡ä»¶çš„
+	 * ×·¼ÓÒ»Ğ©log Õë¶Ô·½·¨£¬ÔÚÖ¸¶¨ĞĞ²åÈëlog£¬ĞĞÊıÊÇÏà¶ÔÓÚÕû¸öÎÄ¼şµÄ
 	 */
 	private boolean insertLogsByLine(List<FormatLog> formatLogList, CtMethod ctMethod) throws Exception {
 
@@ -160,21 +160,21 @@ public class MyClassFileTransformer implements ClassFileTransformer {
 			for (FormatLog formatLog : formatLogList) {
 				// .insertAt(8, "{ log(\"runme:num Bef\"+num.getNum()); }");
 				StringBuffer logCode = new StringBuffer();
-				//æœ‰logã€æœ‰ObjName
+				//ÓĞlog¡¢ÓĞObjName
 				if(formatLog.fullSize) {
 					logCode.append("{ System.out.println(");
 					logCode.append("\"" + formatLog.getLog() + ":\"");
 					logCode.append("+" + formatLog.getObjName() );
 					logCode.append("); }");
 				}else {
-					//åªæœ‰log
+					//Ö»ÓĞlog
 					if (formatLog.getLog() != null && "" != formatLog.getLog() && " " != formatLog.getLog()) {
 						logCode.append("{ System.out.println(\"" + formatLog.getLog() + "\"); }");
 					}else if(formatLog.getObjName() != null && "" != formatLog.getObjName() && " " != formatLog.getObjName()) {
-						//åªæœ‰objName
+						//Ö»ÓĞobjName
 						logCode.append("{ System.out.println(" + formatLog.getObjName() + "); }");
 					}else {
-						//åªæœ‰è¡Œå·
+						//Ö»ÓĞĞĞºÅ
 						continue;
 					}
 					
