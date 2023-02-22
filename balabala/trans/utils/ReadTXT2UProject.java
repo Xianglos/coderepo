@@ -27,7 +27,11 @@ public class ReadTXT2UProject {
 			// 使用while循环，当读到文件末尾时返回null
 			while ((line = br.readLine()) != null) {
 				// 跳过空行
-				if (line == null || line.equals("") || line.equals(" ")) {
+				if (line == null || "".equals(line) || " ".equals(line)) {
+					continue;
+				}
+				//注释开头也跳过
+				if ("#".equals(line.substring(0, 1))) {
 					continue;
 				}
 				
