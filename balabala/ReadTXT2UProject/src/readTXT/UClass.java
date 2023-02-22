@@ -3,17 +3,17 @@ package readTXT;
 import java.util.ArrayList;
 import java.util.List;
 
-//µ¥¸öClass
+//å•ä¸ªClass
 public class UClass {
 
 	public UClass(String className) {
 		uClassName = className;
 	}
 
-	// ×ÔÉíÀàÃû
+	// è‡ªèº«ç±»å
 	private String uClassName;
 
-	// ·½·¨Ãû
+	// æ–¹æ³•å
 	private List<UFunc> uFunc = new ArrayList<UFunc>();
 
 	public String getuClassName() {
