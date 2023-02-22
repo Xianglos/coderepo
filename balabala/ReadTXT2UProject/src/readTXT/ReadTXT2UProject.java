@@ -87,6 +87,7 @@ public class ReadTXT2UProject {
 			UFunc lastFunc=lastClass.getuFunc().get(lastClass.getuFunc().size()-1);
 			lastFunc.getuFormatLog().add(formatLog);
 		}else {
+			//暂时没考虑valdatation
 			System.out.println("!!!!!!!!!!!!!!!!Wrong Fomat!!!!!!!!!!!!!!!!!!!");
 		}
 
