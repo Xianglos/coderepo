@@ -20,5 +20,3 @@ Just some code
 #### trans
 A classFileTransformer demo
 
-#### ReadTXT2UProject
-把文本文件读取成那trans能识别的Object
