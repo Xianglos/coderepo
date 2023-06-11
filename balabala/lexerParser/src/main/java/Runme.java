@@ -13,9 +13,26 @@ public class Runme {
         lexerParserList = new ArrayList<LexerParser>();
 
         // 递归遍历指定文件夹内所有文件
-        String filePath = "D:\\workspace\\java\\lexerParser\\src\\test\\resources";
-        mainRecursion(filePath);
+         String folderpath = "D:\\workspace\\java\\myClassFileTransformer\\src";
+         //mainRecursion(folderpath);
 
+        // 把excel里的vo，转换成VO类
+         String filepath = "D:\\workspace\\java\\myClassFileTransformer\\src\\resource\\test.xlsx";
+         convertExcel2VO(filepath);
+
+    }
+
+    public static void convertExcel2VO(String xlsxPath) {
+        // 开始时间
+        long startTime = System.currentTimeMillis();
+
+        UserLogPropertiesParser parser = new UserLogPropertiesParser(xlsxPath);
+        System.out.println(parser);
+
+        // 结束时间
+        long endTime = System.currentTimeMillis();
+        long timeElapsed = endTime - startTime;
+        System.out.println("END with:" + timeElapsed + " ms.");
     }
 
     /**
@@ -23,6 +40,7 @@ public class Runme {
      * 
      */
     public static void mainRecursion(String folderPath) {
+        // 开始时间
         long startTime = System.currentTimeMillis();
 
         lexerParserList = new ArrayList<LexerParser>();
@@ -35,6 +53,7 @@ public class Runme {
             System.out.println(lx.toString());
         }
 
+        // 结束时间
         long endTime = System.currentTimeMillis();
         long timeElapsed = endTime - startTime;
         System.out.println("END with:" + timeElapsed + " ms.");
@@ -50,7 +69,7 @@ public class Runme {
             if (fileEntry.isDirectory()) {
                 listFilesForFolder(fileEntry);
             } else {
-                if (fileEntry.getName().endsWith(".jav")) {
+                if (fileEntry.getName().endsWith(".java")) {
 
                     System.out.println("\n" + fileEntry.getAbsolutePath());
 
