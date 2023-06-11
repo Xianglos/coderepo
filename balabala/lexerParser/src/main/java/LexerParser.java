@@ -38,7 +38,7 @@ public class LexerParser {
         // 先找到文件中所有变量
         this.parserVariable();
         // 然后遍历这些变量，确定这些变量的位置、出现的次数
-        this.getVariableInfo();
+        this.getAllVariableInfo();
     }
 
     /** 指定的一个文件 */
@@ -63,7 +63,7 @@ public class LexerParser {
      * 先找到文件中所有变量 然后遍历行，确定这些变量的位置、出现的次数
      * 
      */
-    public void getVariableInfo() {
+    public void getAllVariableInfo() {
 
         for (String var : variable) {
             int linenum = 0;
@@ -135,7 +135,9 @@ public class LexerParser {
         StringBuffer sb = new StringBuffer();
         sb.append("\\b");
         for (char ch : chs) {
+            sb.append("[");
             sb.append(String.valueOf(ch));
+            sb.append("]");
         }
         sb.append("\\b");
 
@@ -192,14 +194,6 @@ public class LexerParser {
                 if (this.isEmpty(line) || line.contains("//") || isCommnetBlock || line.contains("System") || line.contains("@")) {
                     line = reader.readLine();
                     continue;
-                }
-
-                // 方法体应该包含在两层{}之内
-                if (line.indexOf("{") > 0) {
-                    bracketCount++;
-                }
-                if (line.indexOf("}") > 0) {
-                    bracketCount--;
                 }
 
                 // 直至第一个public，才是类体,之前的全部跳过
@@ -265,6 +259,14 @@ public class LexerParser {
                 if (var != null && !variable.contains(var)) {
                     log(" " + var);
                     variable.add(var);
+                }
+
+                // 方法体应该包含在两层{}之内
+                if (line.indexOf("{") > 0) {
+                    bracketCount++;
+                }
+                if (line.indexOf("}") > 0) {
+                    bracketCount--;
                 }
 
                 line = reader.readLine();
@@ -751,11 +753,58 @@ public class LexerParser {
      * 打罗格
      */
     private void log(String log) {
-//		if (false) {
+        // if (false) {
         if (true) {
             System.out.print(log);
         }
 
     }
 
+    public String getFilepath() {
+        return filepath;
+    }
+
+    public void setFilepath(String filepath) {
+        this.filepath = filepath;
+    }
+
+    public String getClassname() {
+        return classname;
+    }
+
+    public void setClassname(String classname) {
+        this.classname = classname;
+    }
+
+    public List<String> getBaseType() {
+        return baseType;
+    }
+
+    public void setBaseType(List<String> baseType) {
+        this.baseType = baseType;
+    }
+
+    public List<String> getUserType() {
+        return userType;
+    }
+
+    public void setUserType(List<String> userType) {
+        this.userType = userType;
+    }
+
+    public List<String> getVariable() {
+        return variable;
+    }
+
+    public void setVariable(List<String> variable) {
+        this.variable = variable;
+    }
+
+    public void setVariableInfo(List<VariableInfo> variableInfo) {
+        this.variableInfo = variableInfo;
+    }
+
+    public List<VariableInfo> getVariableInfo() {
+        return variableInfo;
+    }
 }
