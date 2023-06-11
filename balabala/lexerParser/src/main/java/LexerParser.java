@@ -5,6 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import main.vo.VariableInfo;
 
@@ -22,14 +25,20 @@ public class LexerParser {
         // 除了基本类型意以外，把用户类型也加入到type中
         initBaseType();
 
+        // 文件的绝对路径
         filepath = path;
-
+        // 类名
         while (path.indexOf("\\") > 0) {
             path = path.substring(path.indexOf("\\") + 1);
         }
+        classname = path.substring(0, path.indexOf("."));
 
-        classname = path.substring(0, path.indexOf(".") - 1);
+        // 初始化用户变量
         initUserType();
+        // 先找到文件中所有变量
+        this.parserVariable();
+        // 然后遍历这些变量，确定这些变量的位置、出现的次数
+        this.getVariableInfo();
     }
 
     /** 指定的一个文件 */
@@ -55,12 +64,12 @@ public class LexerParser {
      * 
      */
     public void getVariableInfo() {
-        // 先找到文件中所有变量
-        this.parserVariable();
 
         for (String var : variable) {
             int linenum = 0;
             int time = 1;
+            // 注释块
+            boolean isCommnetBlock = false;
 
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(this.filepath));
@@ -68,19 +77,41 @@ public class LexerParser {
                 while (line != null) {
                     linenum++;
 
-                    // 跳过所有空行、注释行、打印log
-                    if (this.isEmpty(line) || line.contains("//") || line.contains("System")) {
+                    // 注释块开始
+                    if (line.contains("/*")) {
+                        isCommnetBlock = true;
+                        line = reader.readLine();
+                        continue;
+                    }
+                    // 注释块结束
+                    if (line.contains("*/")) {
+                        isCommnetBlock = false;
+                    }
+
+                    // 跳过所有空行、注释行、打印log、注释块
+                    if (this.isEmpty(line) || line.contains("//") || line.contains("System") || isCommnetBlock) {
                         line = reader.readLine();
                         continue;
                     }
 
-                    if (line.contains(var)) {
+                    // 全字匹配变量名
+                    if (this.isWholeWordMached(line, var)) {
+                        String regex = "\\b" + var + "\\b";
 
-                        VariableInfo varInfo = new VariableInfo();
-                        varInfo.setName(var);
-                        varInfo.setLinenum(linenum);
-                        varInfo.setTime(time++);
-                        variableInfo.add(varInfo);
+                        Pattern pattern = Pattern.compile(regex);
+                        Matcher matcher = pattern.matcher(line);
+
+                        while (matcher.find()) {
+                            log("Matched: " + matcher.group());
+
+                            // 添加到变量信息里去
+                            VariableInfo varInfo = new VariableInfo();
+                            varInfo.setName(var);
+                            varInfo.setLinenum(linenum);
+                            varInfo.setTime(time++);
+                            variableInfo.add(varInfo);
+                        }
+
                     }
 
                     line = reader.readLine();
@@ -95,6 +126,35 @@ public class LexerParser {
     }
 
     /**
+     * 全字匹配字符串(正则)
+     * 
+     */
+    private Boolean isWholeWordMached(String origin, String word) {
+
+        char[] chs = word.toCharArray();
+        StringBuffer sb = new StringBuffer();
+        sb.append("\\b");
+        for (char ch : chs) {
+            sb.append(String.valueOf(ch));
+        }
+        sb.append("\\b");
+
+        String regex = sb.toString();
+
+        try {
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(origin);
+            return matcher.find();
+        } catch (PatternSyntaxException e) {
+            // TODO: handle exception
+            log("String:" + origin + "regex:" + regex);
+            e.printStackTrace();
+            throw e;
+        }
+
+    }
+
+    /**
      * 找到java文件中所有的变量
      * 
      */
@@ -104,16 +164,42 @@ public class LexerParser {
             BufferedReader reader = new BufferedReader(new FileReader(this.filepath));
             String line = reader.readLine();
 
+            // 行号计数从1开始。但这里是0，循环刚开始的会+1
             int linenum = 0;
+            // 大括号计数
+            int bracketCount = 0;
+            // 注释块
+            boolean isCommnetBlock = false;
+            // 有第一个public了吗
             boolean isfirstPublic = true;
 
             while (line != null) {
                 linenum++;
+                log("\nLine:" + linenum + ">>");
 
-                // 跳过所有空行、注释行、打印log
-                if (this.isEmpty(line) || line.contains("//") || line.contains("System")) {
+                // 注释块开始
+                if (line.contains("/*")) {
+                    isCommnetBlock = true;
                     line = reader.readLine();
                     continue;
+                }
+                // 注释块结束
+                if (line.contains("*/")) {
+                    isCommnetBlock = false;
+                }
+
+                // 跳过所有空行、注释行、打印log、注释块、注解
+                if (this.isEmpty(line) || line.contains("//") || isCommnetBlock || line.contains("System") || line.contains("@")) {
+                    line = reader.readLine();
+                    continue;
+                }
+
+                // 方法体应该包含在两层{}之内
+                if (line.indexOf("{") > 0) {
+                    bracketCount++;
+                }
+                if (line.indexOf("}") > 0) {
+                    bracketCount--;
                 }
 
                 // 直至第一个public，才是类体,之前的全部跳过
@@ -123,74 +209,62 @@ public class LexerParser {
                     continue;
                 }
 
-                // 跳过方法声明那一行
-                // 特征：这行最后一个字符是{
-                if (line.length() == line.indexOf("{") + 1) {
-                    line = reader.readLine();
-                    continue;
+                // 变量只存在于左值，所以如果有等于号的话可以删掉右边的
+                if (line.indexOf("=") > 0) {
+                    line = line.substring(0, line.indexOf("="));
                 }
+                // 去掉throw和之后的内容
+                if (line.indexOf("throw") > 0) {
+                    line = line.substring(0, line.indexOf("throw"));
+                }
+                // 去掉throw和之后的内容
+                if (line.indexOf("return") > 0) {
+                    line = line.substring(0, line.indexOf("return"));
+                }
+                line = line.trim();
 
-                // 判断这行是否有基本类型、用户类型的变量定义
-                int isVarDefined = -1;
-                String vartype = "";
-                for (String type : this.baseType) {
-                    if (line.contains(type)) {
-                        isVarDefined = line.indexOf(type);
-                        vartype = type;
-                        break;
+                String var = null;
+                // 在>2层{}里，是方法体
+                if (bracketCount >= 2) {
+                    var = this.analyzeMethodBody(line);
+                }
+                // 在1层{}里，static常量或者方法入参
+                else if (bracketCount == 1 || bracketCount == 2) {
+                    // 用public/private/protected修饰的变量，行尾应该有封号
+                    if (line.contains(";")) {
+                        var = this.analyzeMethodBody(line);
                     }
-                }
-                if (vartype == "") {
-                    for (String type : this.userType) {
-                        if (line.contains(type)) {
-
-                            isVarDefined = line.indexOf(type);
-                            vartype = type;
-                            break;
+                    // 方法的没入参
+                    else if (line.contains("() {")) {
+                        // this.analyzeFuncParam(line);
+                    }
+                    // 方法的入参，也是要检索的对象
+                    else {
+                        if (line.indexOf("(") > 0) {
+                            line = line.substring(line.indexOf("("), line.length());
                         }
+                        if (line.indexOf(")") > 0) {
+                            line = line.substring(0, line.indexOf(")"));
+                        }
+                        this.analyzeFuncParam(line);
                     }
+
+                }
+                // 很罕见，因为参数列表太长，方法定义的第一行就换行了
+                else {
+                    if (line.indexOf("(") > 0) {
+                        line = line.substring(line.indexOf("("), line.length());
+                    }
+                    if (line.indexOf(")") > 0) {
+                        line = line.substring(0, line.indexOf(")"));
+                    }
+                    this.analyzeFuncParam(line);
                 }
 
-                // 有类型定义
-                if (vartype != "") {
-
-                    // 有效的类型定义
-                    if (isdefinition(line, vartype)) {
-
-                        // 有效、准确的定义,把变量名挖出来
-                        if (vartype != "") {
-                            // 普通定义的变量
-                            String vars = "";// line.substring(isVarDefined + vartype.length());
-                            // 使用泛型的
-                            if (line.indexOf(">") > 0) {
-                                vars = line.substring(line.indexOf(">") + 1, line.indexOf("="));
-                            }
-                            // 使用数组
-                            else if (line.indexOf("]") > 0) {
-                                vars = line.substring(line.indexOf("]") + 1, line.indexOf("="));
-                            }
-                            // 带初始化的
-                            else if (line.indexOf("=") > 0) {
-                                vars = line.substring(isVarDefined, line.indexOf("=")).trim();
-                            }
-                            // 初始化都不带的
-                            else {
-                                vars = line.substring(isVarDefined, line.indexOf(";"));
-                            }
-
-                            vars = vars.trim();
-                            if (vars.indexOf(" ") > 0) {
-                                vars = vars.substring(vars.indexOf(" ") + 1);
-                            }
-
-                            // 不添加重复变量
-                            if (!variable.contains(vars)) {
-                                variable.add(vars);
-                            }
-
-                        }
-
-                    }
+                // 不添加重复变量
+                if (var != null && !variable.contains(var)) {
+                    log(" " + var);
+                    variable.add(var);
                 }
 
                 line = reader.readLine();
@@ -204,41 +278,181 @@ public class LexerParser {
     }
 
     /**
+     * 判断参数列表里是否有有效定义
+     * 
+     * 
+     */
+    private void analyzeFuncParam(String line) {
+        // 一行里可能会有多个参数，故分割后再处理
+        String[] varArrey = line.split(",");
+
+        // 没参数，回了
+        if (varArrey == null || varArrey.length == 0) {
+            return;
+        }
+
+        for (String vars : varArrey) {
+
+            int typeIndex = -1;
+            String vartype = "";
+            for (String type : this.userType) {
+                if (vars.contains(type)) {
+                    typeIndex = vars.indexOf(type);
+                    vartype = type;
+                    break;
+                }
+            }
+            if (vartype == "") {
+                for (String type : this.baseType) {
+                    if (vars.contains(type)) {
+                        typeIndex = vars.indexOf(type);
+                        vartype = type;
+                        break;
+                    }
+                }
+            }
+
+            // 有类型定义
+            if (vartype != "") {
+                String vartmp = "";
+                vartmp = vars.substring(typeIndex);
+                vartmp = vartmp.substring(vartmp.indexOf(" ") + 1);
+                // 最后一个参数
+                if (vars.contains(")")) {
+                    vartmp = vartmp.substring(0, vartmp.indexOf(")"));
+                }
+
+                if (vartmp != null && !variable.contains(vartmp)) {
+                    log(" " + vartmp);
+                    variable.add(vartmp);
+                }
+
+            }
+        }
+
+    }
+
+    /**
+     * 判断方法体里是否是有效定义
+     * 
+     * 
+     */
+    private String analyzeMethodBody(String line) {
+        // 判断这行是否有基本类型、用户类型的变量定义
+        int typeIndex = -1;
+        String vartype = "";
+        for (String type : this.userType) {
+            if (line.contains(type)) {
+                typeIndex = line.indexOf(type);
+                vartype = type;
+                break;
+            }
+        }
+        if (vartype == "") {
+            for (String type : this.baseType) {
+                if (line.contains(type)) {
+                    typeIndex = line.indexOf(type);
+                    vartype = type;
+                    break;
+                }
+            }
+        }
+
+        // 有类型定义
+        if (vartype != "") {
+
+            // 有效的类型定义
+            if (isdefinition(line, vartype)) {
+                // 去掉类定义之前的字符
+                line = line.substring(typeIndex + vartype.length() + 1);
+
+                // 有效、准确的定义,把变量名挖出来
+                if (vartype != "") {
+                    // 普通定义的变量
+                    String var = "";
+                    // 使用泛型的
+                    if (line.indexOf(">") > 0) {
+                        var = line.substring(line.indexOf(">") + 1, line.indexOf("="));
+                    }
+                    // 使用数组
+                    else if (line.indexOf("]") > 0) {
+                        var = line.substring(line.indexOf("]") + 1, line.indexOf("="));
+                    }
+                    // 带初始化的
+                    // else if (line.indexOf("=") > 0) {
+                    // var = line.substring(0, line.indexOf("=")).trim();
+                    // }
+                    // 初始化都不带的
+                    else {
+                        // 以封号为截结尾的定义
+                        if (line.indexOf(";") > 0) {
+                            var = line.substring(0, line.indexOf(";"));
+                        } else {
+                            // 定义了，但是封号换行了
+                            var = line;// .substring(0, line.indexOf(" "));
+                        }
+
+                    }
+
+                    var = var.trim();
+                    if (var.indexOf(" ") > 0) {
+                        var = var.substring(var.indexOf(" ") + 1);
+                    }
+
+                    return var;
+
+                }
+
+            }
+        }
+
+        return null;
+
+    }
+
+    /**
      * 判断是否是有效定义 类型的前一个字符 类型的后一个字符
      * 
      */
     private boolean isdefinition(String line, String vartype) {
-        int isVarDefined = line.indexOf(vartype);
-        String bef = line.substring(isVarDefined - 1, isVarDefined);
-        String aft = line.substring(isVarDefined - 1, isVarDefined);
+        int typeIndex = line.indexOf(vartype);
+        String befCh = "";
+        if (typeIndex > 0) {
+            befCh = line.substring(typeIndex - 1, typeIndex);
+        }
+        String aftCh = line.substring(typeIndex + vartype.length(), typeIndex + vartype.length() + 1);
 
         // 排除空的
-        if (bef == null || aft == null) {
+        if (befCh == null || aftCh == null) {
             return false;
         }
-        if (bef.length() + aft.length() == 0) {
+        if (befCh.length() + aftCh.length() == 0) {
             return false;
         }
 
         // 类型前面不能有new
-        if (line.indexOf("new " + vartype) > 0 && line.indexOf("new " + vartype) < isVarDefined) {
+        if (line.indexOf("new " + vartype) > 0 && line.indexOf("new " + vartype) < typeIndex) {
+            return false;
+        }
+        // 不能throw类型
+        if (line.indexOf("throw ") > 0) {
             return false;
         }
 
         // 泛型 List<String>
-        if (bef.equals("<") && aft.equals(">")) {
+        if (befCh.equals("<") && aftCh.equals(">")) {
             return true;
         }
         // 数组 String[]
-        if (bef.equals(" ") && aft.equals("[")) {
+        if (this.isEmpty(befCh) && "[]".equals(line.substring(typeIndex + vartype.length(), typeIndex + vartype.length() + 2))) {
             return true;
         }
         // 定义时赋值的 String filepath = "D:\\wor
-        if (bef.equals(" ") && (aft.equals(" ") || aft.equals("="))) {
-            return true;
-        }
+        // if (bef.equals(" ") && (aft.equals(" ") || aft.equals("="))) {
+        // return true;
+        // }
         // 定义时不赋值的 int testint;
-        if (bef.equals(" ") && (aft.equals(" ") || aft.equals(";"))) {
+        if (this.isEmpty(befCh) && (aftCh.equals(" ") || aftCh.equals(";"))) {
             return true;
         }
 
@@ -265,12 +479,12 @@ public class LexerParser {
                 }
 
                 // 用户指定类需要import，必定在类声明之前
-                if (line.contains("public")) {
+                if (line.contains("public ")) {
                     break;
                 }
 
                 // 只有import的,才需要判断。
-                if (line.contains("import")) {
+                if (line.contains("import ")) {
                     // 删除最后一个[.]以前的内容，删除最后一个;
                     line = line.replaceAll(".+[.]", "").replace(";", "");
                     // 添加到用户类型里头
@@ -323,7 +537,7 @@ public class LexerParser {
             String line = reader.readLine();
             while (line != null) {
                 context.append(line);
-                // System.out.println(line);
+                // log(line);
                 line = reader.readLine();
             }
             reader.close();
@@ -346,7 +560,7 @@ public class LexerParser {
             int ch;
             while ((ch = reader.read()) != -1) {
                 // ch is each character in your file.
-                System.out.println(Character.toString(ch));
+                log(Character.toString(ch));
             }
             reader.close();
 
@@ -512,7 +726,8 @@ public class LexerParser {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("LexerParser [filepath=");
+        builder.append("LexerParser [");
+        builder.append("filepath=");
         builder.append(filepath);
         builder.append(",\n classname=");
         builder.append(classname);
@@ -522,10 +737,25 @@ public class LexerParser {
         builder.append(userType);
         builder.append(",\n variable=");
         builder.append(variable);
-        builder.append(",\n variableInfo=");
-        builder.append(variableInfo);
-        builder.append("]");
+        builder.append(",\n variableInfo=\n");
+        for (VariableInfo varInfo : variableInfo) {
+            builder.append("              ");
+            builder.append(varInfo.toString());
+            builder.append("\n");
+        }
+        builder.append("\n]");
         return builder.toString();
+    }
+
+    /**
+     * 打罗格
+     */
+    private void log(String log) {
+//		if (false) {
+        if (true) {
+            System.out.print(log);
+        }
+
     }
 
 }
