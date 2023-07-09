@@ -1,151 +1,124 @@
-package utils;
+package utils.vo;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+/** 需要打印的log信息 */
+public class LogInfoVO {
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+    /** 类名 */
+    public String className;
 
-import utils.vo.LogInfoVO;
+    /** 所在方法名 */
+    public String func;
 
-/**
- * 把excel中，用户配置的需要打印的log信息，转化成VO
- * 
- */
-public class UserLogPropertiesParser {
+    /** 变量名 */
+    public String variable;
 
-    /**
-     * 只接受带参构造，需要传入.xlsx的绝对路径
-     * 
-     */
-    public UserLogPropertiesParser(String xlsxPath) {
-        this.excelPath = xlsxPath;
-        // 把excel里的vo，转换成VO类
-        this.parser();
+    /** 出现次数 */
+    public int time;
 
+    /** 行号 */
+    public int linenum;
+
+    /** 日志内容 */
+    public String context;
+
+    /** 备注 */
+    public String remark;
+
+    public String getClassName() {
+        return className;
     }
 
-    /** excel文件名 */
-    public String excelPath;
+    public void setClassName(String className) {
+        this.className = className;
+    }
 
-    /** 需要打印的log信息 */
-    public List<LogInfoVO> logsInfoVOs = new ArrayList<LogInfoVO>();
+    public String getVariable() {
+        return variable;
+    }
 
-    /** 把excel里的vo，转换成VO类 */
-    public void parser() {
+    public void setVariable(String variable) {
+        this.variable = variable;
+    }
 
-        try {
-            // 1.获取文件输入流
-            InputStream is = new FileInputStream(this.excelPath);
-            // 2.获取工作簿对象
-            XSSFWorkbook workbook = new XSSFWorkbook(is);
-            // 3.获取工作表对象
-            Sheet sheet = workbook.getSheetAt(0);
-            // 4.获取行对象
-            // Row row = sheet.getRow(0);
-            // 5.获取单元格对象
-            // Cell cell = row.getCell(0);
-            // 6.获取单元格中的值
-            // String value = cell.getStringCellValue();
+    public int getTime() {
+        return time;
+    }
 
-            boolean endFlag = false;
+    public void setTime(int time) {
+        this.time = time;
+    }
 
-            for (int findClass = 0; findClass < 1024; findClass++) {
-                // 4.获取行对象
-                Row row = sheet.getRow(findClass);
-                // 空行
-                if (row == null) {
-                    continue;
-                }
-
-                // 5.获取单元格对象
-                Cell propertiesClass = row.getCell(1);
-
-                // 找到了目标类
-                if (propertiesClass != null && "main.vo.UserLogProperties".equals(propertiesClass.getStringCellValue())) {
-                    // VO的有效数据从findClass+2开始
-
-                    for (int rownum = findClass + 3; rownum < 1024; rownum++) {
-                        Row paramRow = sheet.getRow(rownum);
-
-                        // 空行
-                        if (paramRow == null) {
-                            endFlag = true;
-                            break;
-                        }
-
-                        // 需要打印的log信息
-                        DataFormatter dataFormatter = new DataFormatter();
-
-                        LogInfoVO infoVO = new LogInfoVO();
-                        infoVO.setClassName(paramRow.getCell(1).getStringCellValue());
-
-                        infoVO.setFunc(paramRow.getCell(2).getStringCellValue());
-                        infoVO.setVariable(paramRow.getCell(3).getStringCellValue());
-
-                        infoVO.setTime(dataFormatter.formatCellValue(paramRow.getCell(4)));
-                        infoVO.setLinenum(dataFormatter.formatCellValue(paramRow.getCell(5)));
-
-                        infoVO.setContext(paramRow.getCell(6).getStringCellValue());
-                        infoVO.setRemark(paramRow.getCell(7).getStringCellValue());
-                        logsInfoVOs.add(infoVO);
-                    }
-
-                    // 已经结束咧
-                    if (endFlag) {
-                        break;
-                    }
-
-                }
-            }
-
-        } catch (FileNotFoundException e) {
-            // 找不到文件
-            log(this.excelPath);
-            e.printStackTrace();
-        } catch (IOException e) {
-            // 读写错误
-            log(this.excelPath);
-            e.printStackTrace();
+    public void setTime(String time) {
+        if (time != null && !"".equals(time) && !" ".equals(time)) {
+            this.time = Integer.valueOf(time);
+        } else if (time.contains(".")) {
+            this.time = (int) Float.parseFloat(time);
+        } else {
+            this.time = 0;
         }
-
     }
 
-    public List<LogInfoVO> getLogsInfoVOs() {
-        return logsInfoVOs;
+    public int getLinenum() {
+        return linenum;
     }
 
-    public void setLogsInfoVOs(List<LogInfoVO> logsInfoVOs) {
-        this.logsInfoVOs = logsInfoVOs;
+    public void setLinenum(int linenum) {
+        this.linenum = linenum;
+    }
+
+    public void setLinenum(String linenum) {
+        if (linenum != null && !"".equals(linenum) && !" ".equals(linenum)) {
+            this.linenum = Integer.valueOf(linenum);
+        } else if (linenum.contains(".")) {
+            this.linenum = (int) Float.parseFloat(linenum);
+        } else {
+            this.linenum = 0;
+        }
+    }
+
+    public String getContext() {
+        return context;
+    }
+
+    public void setContext(String context) {
+        this.context = context;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public String getFunc() {
+        return func;
+    }
+
+    public void setFunc(String func) {
+        this.func = func;
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("UserLogPropertiesParser [logsInfoVOs=");
-        for (LogInfoVO inf : logsInfoVOs) {
-            builder.append("\n             ");
-            builder.append(inf);
-        }
-        builder.append("\n]");
+        builder.append("LogInfoVO [className=");
+        builder.append(className);
+        builder.append(", func=");
+        builder.append(func);
+        builder.append(", variable=");
+        builder.append(variable);
+        builder.append(", time=");
+        builder.append(time);
+        builder.append(", linenum=");
+        builder.append(linenum);
+        builder.append(", context=");
+        builder.append(context);
+        builder.append(", remark=");
+        builder.append(remark);
+        builder.append("]");
         return builder.toString();
     }
 
-    /**
-     * 打罗格
-     */
-    private void log(String log) {
-//      if (false) {
-        if (true) {
-            System.out.print(log);
-        }
-
-    }
 }
