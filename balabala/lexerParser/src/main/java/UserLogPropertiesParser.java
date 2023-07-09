@@ -69,7 +69,7 @@ public class UserLogPropertiesParser {
                 Cell propertiesClass = row.getCell(1);
 
                 // 找到了目标类
-                if ("utils.UserLogProperties".equals(propertiesClass.getStringCellValue())) {
+                if (propertiesClass != null && "main.vo.UserLogProperties".equals(propertiesClass.getStringCellValue())) {
                     // VO的有效数据从findClass+2开始
 
                     for (int rownum = findClass + 3; rownum < 1024; rownum++) {
@@ -86,13 +86,15 @@ public class UserLogPropertiesParser {
 
                         LogInfoVO infoVO = new LogInfoVO();
                         infoVO.setClassName(paramRow.getCell(1).getStringCellValue());
-                        infoVO.setVariable(paramRow.getCell(2).getStringCellValue());
 
-                        infoVO.setTime(dataFormatter.formatCellValue(paramRow.getCell(3)));
-                        infoVO.setLinenum(dataFormatter.formatCellValue(paramRow.getCell(4)));
+                        infoVO.setFunc(paramRow.getCell(2).getStringCellValue());
+                        infoVO.setVariable(paramRow.getCell(3).getStringCellValue());
 
-                        infoVO.setContext(paramRow.getCell(5).getStringCellValue());
-                        infoVO.setRemark(paramRow.getCell(6).getStringCellValue());
+                        infoVO.setTime(dataFormatter.formatCellValue(paramRow.getCell(4)));
+                        infoVO.setLinenum(dataFormatter.formatCellValue(paramRow.getCell(5)));
+
+                        infoVO.setContext(paramRow.getCell(6).getStringCellValue());
+                        infoVO.setRemark(paramRow.getCell(7).getStringCellValue());
                         logsInfoVOs.add(infoVO);
                     }
 
