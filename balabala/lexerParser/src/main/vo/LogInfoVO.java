@@ -6,6 +6,9 @@ public class LogInfoVO {
     /** 类名 */
     public String className;
 
+    /** 所在方法名 */
+    public String func;
+
     /** 变量名 */
     public String variable;
 
@@ -89,11 +92,21 @@ public class LogInfoVO {
         this.remark = remark;
     }
 
+    public String getFunc() {
+        return func;
+    }
+
+    public void setFunc(String func) {
+        this.func = func;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("LogInfoVO [className=");
         builder.append(className);
+        builder.append(", func=");
+        builder.append(func);
         builder.append(", variable=");
         builder.append(variable);
         builder.append(", time=");
