@@ -17,6 +17,7 @@ import javassist.CtNewMethod;
 import javassist.NotFoundException;
 import utils.LexerParser;
 import utils.UserLogPropertiesParser;
+import utils.vo.FuncInfo;
 import utils.vo.LogInfoVO;
 import utils.vo.VariableInfo;
 
@@ -58,7 +59,7 @@ public class MyClassFileTransformer4 implements ClassFileTransformer {
 
         // 用来存要转换的那个类的所有变量信息
         List<VariableInfo> targetClassVarinfo = null;
-
+        List<FuncInfo> targetfuncInfo = null;
 
         // 去掉所有包名，只剩下类名
         String classNameWithoutPkg = className;
@@ -69,6 +70,7 @@ public class MyClassFileTransformer4 implements ClassFileTransformer {
         for (LexerParser lp : lexerParserList) {
             if (lp.getClassname().equals(classNameWithoutPkg)) {
                 targetClassVarinfo = lp.getVariableInfo();
+                targetfuncInfo = lp.getFuncInfo();
                 log("transform:Get it:" + classNameWithoutPkg);
             }
         }
@@ -122,34 +124,48 @@ public class MyClassFileTransformer4 implements ClassFileTransformer {
                 // 最终log要插入的行数
                 int logLine = 0;
 
-                if (!isBlank(logInfo.getVariable()) && logInfo.getTime() > 0 && isBlank(logInfo.getContext())) {
-                    // 有变量、次数的(没有内容)：找到这个变量对应次数的行数，打印变量所在行的下一行
-                    for (VariableInfo allLogInfo : targetClassVarinfo) {
-                        // 变量名和行号一致
-                        if (allLogInfo.getName().equals(logInfo.getVariable()) && allLogInfo.getTime() == logInfo.getTime()) {
-                            logLine = allLogInfo.getLinenum() + 1;
-                            logString = logInfo.getVariable();
-                            break;
-                        }
-                    }
+//                if (!isBlank(logInfo.getVariable()) && logInfo.getTime() > 0 && isBlank(logInfo.getContext())) {
+//                    // 有变量、次数的(没有内容)：找到这个变量对应次数的行数，打印变量所在行的下一行
+//                    for (VariableInfo allLogInfo : targetClassVarinfo) {
+//                        // 变量名和行号一致
+//                        if (allLogInfo.getName().equals(logInfo.getVariable()) && allLogInfo.getTime() == logInfo.getTime()) {
+//                            
+//                            logLine = allLogInfo.getLinenum() + 1;
+//                            logString = logInfo.getVariable();
+//                            break;
+//                        }
+//                    }
+//
+//                } else if (logInfo.getLinenum() > 0 && !isBlank(logInfo.getContext())) {
+//                    // 有行数、内容的：在当前行插入纯内容
+//                    logLine = logInfo.getLinenum();
+//                    logString = "\"" + logInfo.getContext() + "\"";
+//
+//                } else if (!isBlank(logInfo.getVariable()) && logInfo.getTime() > 0 && !isBlank(logInfo.getContext())) {
+//                    // 有变量、次数、内容的：拼上内容，然后打在下一行
+//                    for (VariableInfo allLogInfo : targetClassVarinfo) {
+//                        // 变量名和行号一致
+//                        if (allLogInfo.getName().equals(logInfo.getVariable()) && allLogInfo.getTime() == logInfo.getTime()) {
+//                            logLine = allLogInfo.getLinenum() + 1;
+//                            logString = "\"" + logInfo.getContext() + "\"+" + logInfo.getVariable() + "";
+//                            break;
+//                        }
+//                    }
+//
+//                }
 
-                } else if (logInfo.getLinenum() > 0 && !isBlank(logInfo.getContext())) {
-                    // 有行数、内容的：在当前行插入纯内容
-                    logLine = logInfo.getLinenum();
-                    logString = "\"" + logInfo.getContext() + "\"";
-
-                } else if (!isBlank(logInfo.getVariable()) && logInfo.getTime() > 0 && !isBlank(logInfo.getContext())) {
-                    // 有变量、次数、内容的：拼上内容，然后打在下一行
-                    for (VariableInfo allLogInfo : targetClassVarinfo) {
-                        // 变量名和行号一致
-                        if (allLogInfo.getName().equals(logInfo.getVariable()) && allLogInfo.getTime() == logInfo.getTime()) {
-                            logLine = allLogInfo.getLinenum() + 1;
-                            logString = "\"" + logInfo.getContext() + "\"+" + logInfo.getVariable() + "";
-                            break;
-                        }
+                int inx = 0;
+                int time = 0;
+                for (FuncInfo fucInfo : targetfuncInfo) {
+                    inx++;
+                    // 方法名字相等，并且找到了最后一个在方法之前的变量
+                    if (fucInfo.getName().equals(logInfo.getFunc()) && fucInfo.linenum > logInfo.getLinenum()) {
+                        break;
                     }
 
                 }
+
+                logLine = targetClassVarinfo.get(inx + logInfo.getTime()).getLinenum() + 1;
 
                 if (logLine > 0) {
                     log("transform:Log at line:" + logLine + ">> context:" + logString);
@@ -168,7 +184,8 @@ public class MyClassFileTransformer4 implements ClassFileTransformer {
 
                     CtMethod ctMethod = ctClass.getDeclaredMethod(funcname);
                     ctMethod.insertAt(logLine, "log(\">>>\"+" + logString + ");");
-                    // ctMethod.insertAt(logLine, "System.out.println(\"==============This is it!\");");
+                    // ctMethod.insertAt(logLine, "System.out.println(\"==============This is
+                    // it!\");");
                 }
 
             }
