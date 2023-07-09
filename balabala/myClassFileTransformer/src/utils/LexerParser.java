@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import utils.vo.FuncInfo;
 import utils.vo.VariableInfo;
 
 /**
@@ -38,7 +39,12 @@ public class LexerParser {
         // 先找到文件中所有变量
         this.parserVariable();
         // 然后遍历这些变量，确定这些变量的位置、出现的次数
-        this.getAllVariableInfo();
+        // this.getAllVariableInfo();
+        // 获取类文件里所有的方法名字，以及出现的行号
+        this.getAllFunc();
+        // 然后遍历这些变量，确定这些变量的位置、出现的次数
+        // 相对于每个方法
+        // this.getAllVariableInfoByFunc();
     }
 
     /** 指定的一个文件 */
@@ -56,8 +62,91 @@ public class LexerParser {
     /** 所有变量清单 */
     public List<String> variable = new ArrayList<String>();
 
+    /** 所有子方法清单 */
+    public List<FuncInfo> funcInfo = new ArrayList<FuncInfo>();
+
     /** 变量的信息 */
     public List<VariableInfo> variableInfo = new ArrayList<VariableInfo>();
+
+    /**
+     * 获取类文件里所有的方法名字，以及出现的行号
+     * 
+     */
+    private void getAllFunc() {
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(this.filepath));
+
+            // 行号计数从1开始。但这里是0，循环刚开始的会+1
+            int linenum = 0;
+            // 有第一个public了吗
+            boolean isfirstPublic = true;
+
+            String line = reader.readLine();
+            while (line != null) {
+                linenum++;
+
+                // 方法必须要用public /private /protect 开头
+                int keyword = 0;
+                boolean isFunc = false;
+                if (line.indexOf("public ") > 0) {
+                    keyword = line.indexOf("public ");
+                    // public之前只有空格或者tab
+                    if (this.isEmpty(line.substring(0, keyword))) {
+                        keyword = keyword;
+                    } else {
+                        keyword = 0;
+                    }
+
+                } else if (line.indexOf("private ") > 0) {
+                    keyword = line.indexOf("private ");
+                    if (this.isEmpty(line.substring(0, keyword))) {
+                        keyword = keyword;
+                    } else {
+                        keyword = 0;
+                    }
+
+                } else if (line.indexOf("protect ") > 0) {
+                    keyword = line.indexOf("protect ");
+                    if (this.isEmpty(line.substring(0, keyword))) {
+                        keyword = keyword;
+                    } else {
+                        keyword = 0;
+                    }
+                }
+
+                // 全局变量，而不是方法
+                if (line.indexOf(";") > 0) {
+                    keyword = 0;
+                }
+
+                // 是有效的方法定义
+                if (keyword > 0) {
+
+                    String funcname = line.substring(keyword);
+                    while (funcname.indexOf(" ") < funcname.indexOf("(")) {
+                        funcname = funcname.substring(funcname.indexOf(" ") + 1);
+                    }
+                    funcname = funcname.substring(0, funcname.indexOf("("));
+
+                    FuncInfo func = new FuncInfo();
+                    func.setLinenum(linenum);
+                    func.setName(funcname);
+                    System.out.println(func.toString());
+
+                    this.funcInfo.add(func);
+
+                }
+
+                line = reader.readLine();
+            }
+            reader.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     /**
      * 先找到文件中所有变量 然后遍历行，确定这些变量的位置、出现的次数
@@ -745,6 +834,11 @@ public class LexerParser {
             builder.append(varInfo.toString());
             builder.append("\n");
         }
+        for (FuncInfo func : funcInfo) {
+            builder.append("              ");
+            builder.append(func.toString());
+            builder.append("\n");
+        }
         builder.append("\n]");
         return builder.toString();
     }
@@ -753,8 +847,8 @@ public class LexerParser {
      * 打罗格
      */
     private void log(String log) {
-        if (false) {
-        // if (true) {
+        // if (false) {
+        if (true) {
             System.out.print(log);
         }
 
@@ -806,5 +900,13 @@ public class LexerParser {
 
     public List<VariableInfo> getVariableInfo() {
         return variableInfo;
+    }
+
+    public List<FuncInfo> getFuncInfo() {
+        return funcInfo;
+    }
+
+    public void setFuncInfo(List<FuncInfo> funcInfo) {
+        this.funcInfo = funcInfo;
     }
 }
