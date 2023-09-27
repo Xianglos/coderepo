@@ -9,6 +9,10 @@ REG_MATCH1=0
 REG_MATCH2=0
 REG_MATCH3=0
 
+RST_LIST_LINE[0]=0
+RST_LIST_CONTEXT[0]=""
+RST_COUNT=0
+
 #define function
 function readfile() {
     LINE=1
@@ -21,7 +25,13 @@ function readfile() {
             REG_MATCH3=$(expr match "$CURREN_LINE" "$KEYWORD3")
 
             if [ $REG_MATCH1 -gt 0 ] || [ $REG_MATCH2 -gt 0 ] || [ $REG_MATCH3 -gt 0 ]; then
-                echo "Line$LINE>  $CURREN_LINE"
+                #echo "Line$LINE: $CURREN_LINE"
+
+                # Add to result list
+                RST_LIST_LINE=("${RST_LIST_LINE[@]}" $LINE)
+                RST_LIST_CONTEXT=("${RST_LIST_CONTEXT[@]}" "$CURREN_LINE")
+                #echo "Line: ${RST_LIST_LINE[$RST_COUNT]} ,Context: ${RST_LIST_CONTEXT[$RST_COUNT]}"
+                ((RST_COUNT++))
             fi
         else
             continue
@@ -42,4 +52,13 @@ for FILE in $FIEL_LIST; do
         readfile $FILEPATH
     fi
 
+done
+
+touch result.txt
+RESULT_FILE=result.txt
+
+INX=0
+while [ $INX -lt $RST_COUNT ]; do
+    echo "Line: ${RST_LIST_LINE[$INX]} ,Context: ${RST_LIST_CONTEXT[$INX]}" >>$RESULT_FILE
+    ((INX++))
 done
