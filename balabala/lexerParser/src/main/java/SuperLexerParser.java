@@ -27,9 +27,13 @@ public class SuperLexerParser extends LexerParser {
 		for (int inx = 0; inx < singleCodeArrey.length; inx++) {
 			// 删除等号之后的内容
 			// 如果是全局变量的话还要删除
-			singleCodeArrey[inx] = singleCodeArrey[inx].replaceAll("[=].*", "").replaceAll(".*[s][t][a][t][i][c]", "")
-					.replaceAll(".*[p][u][b][l][i][c]", "").replaceAll(".*[p][r][i][v][a][t][e]", "")
-					.replaceAll(".*[p][r][o][t][e][c][t][e][d]", "").trim();
+			singleCodeArrey[inx] = singleCodeArrey[inx]
+					.replaceAll("[=].*", "")
+					.replaceAll(".*[s][t][a][t][i][c]", "")
+					.replaceAll(".*[p][u][b][l][i][c]", "")
+					.replaceAll(".*[p][r][i][v][a][t][e]", "")
+					.replaceAll(".*[p][r][o][t][e][c][t][e][d]", "")
+					.trim();
 		}
 
 		// declaration
@@ -42,7 +46,8 @@ public class SuperLexerParser extends LexerParser {
 				// import的类型
 				for (String type : userType) {
 					// 直接声明、声明List、声明数组
-					if ((type + " ").equals(array[0] + " ") || array[0].contains("<" + type + ">")
+					if ((type + " ").equals(array[0] + " ") 
+							|| array[0].contains("<" + type + ">")
 							|| array[0].contains(type + "[]")) {
 						isClass = true;
 						break;
@@ -52,7 +57,8 @@ public class SuperLexerParser extends LexerParser {
 					// 基本类型
 					for (String type : baseType) {
 						// 直接声明、声明List、声明数组
-						if ((type + " ").equals(array[0] + " ") || array[0].contains("<" + type + ">")
+						if ((type + " ").equals(array[0] + " ") 
+								|| array[0].contains("<" + type + ">")
 								|| array[0].contains(type + "[]")) {
 							isClass = true;
 							break;
@@ -102,8 +108,12 @@ public class SuperLexerParser extends LexerParser {
 				}
 
 				// 跳过所有空行、注释行、注释块、注解
-				if (this.isEmpty(line) || line.contains("//") || line.contains("	//") || isCommnetBlock
-						|| line.contains("@") || line.toString().contains("package")
+				if (this.isEmpty(line) 
+						|| line.contains("//") 
+						|| line.contains("	//") 
+						|| isCommnetBlock
+						|| line.contains("@") 
+						|| line.toString().contains("package")
 						|| line.toString().contains("import")) {
 
 					line = reader.readLine();
