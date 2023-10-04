@@ -3,6 +3,8 @@ package main.java;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SuperLexerParser extends LexerParser {
 
@@ -33,7 +35,7 @@ public class SuperLexerParser extends LexerParser {
 		// declaration
 		for (String dec : singleCodeArrey) {
 			String[] array = dec.split(" ");
-			if (array != null && array.length >= 2) {
+			if (array != null && array.length == 2) {
 
 				// 判断是否是一个类
 				boolean isClass = false;
@@ -59,14 +61,14 @@ public class SuperLexerParser extends LexerParser {
 				}
 
 				// 是一个类，数组第二个元素就是变量名字
-				if (isClass) {
+				if (isClass && this.isJavaVariable(array[1].trim())) {
 					super.variable.add(array[1].trim());
 				}
 
 			}
 		}
 
-		//测试检索结果
+		// 测试检索结果
 //		for (String var : super.variable) {
 //			System.out.println(">>" + var);
 //		}
@@ -119,6 +121,18 @@ public class SuperLexerParser extends LexerParser {
 		}
 
 		return context.toString();
+	}
+
+	/**
+	 * 判断是否满足java命名规范 大小写字母和数字 0~9:48~57 A~Z:65~90 a~z:97~122 _:95 $:36
+	 */
+	protected boolean isJavaVariable(String str) {
+		String regex = "[a-z]+[a-z0-9A-Z_$]*";
+
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(str);
+
+		return matcher.find();
 	}
 
 }
